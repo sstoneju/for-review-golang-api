@@ -5,7 +5,6 @@ import (
 	"edu-bridge/edu-app-api/configs"
 	"edu-bridge/edu-app-api/models"
 	"fmt"
-	"log"
 )
 
 type QuestionService struct {
@@ -27,15 +26,9 @@ func (s QuestionService) Add(ctx context.Context, m interface{}) (interface{}, e
 		return models.Question{}, fmt.Errorf("type assertion failed: q is not a models.Question")
 	}
 
-	newDoc := s.fs.collection.NewDoc()
-	model.Id = newDoc.ID
+	result, err := s.fs.Add(ctx, model)
 
-	_, err := newDoc.Create(ctx, model)
-	if err != nil {
-		log.Println("error: ", err)
-		return models.Question{}, fmt.Errorf("firestoreService: func Add failure")
-	}
-	return model, nil
+	return result, err
 }
 
 func (s QuestionService) Get(ctx context.Context, id string) (interface{}, error) {
