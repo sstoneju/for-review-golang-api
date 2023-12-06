@@ -5,10 +5,16 @@ import (
 	"edu-bridge/edu-app-api/configs"
 	"edu-bridge/edu-app-api/models"
 	"fmt"
+	"log"
 )
 
 type QuestionService struct {
 	fs FirestoreService // 포인터 형 변수로 사용한다.
+}
+
+type StoreService interface {
+	Add(ctx context.Context, m models.Question) (models.Question, error)
+	Get(ctx context.Context, id string) (models.Question, error)
 }
 
 // QuestionService의 포인터형 변수를 return 한다.
@@ -19,19 +25,19 @@ func NewQuestionService(fs FirestoreService) *QuestionService {
 	}
 }
 
-func (s QuestionService) Add(ctx context.Context, m interface{}) (interface{}, error) {
-	model, ok := m.(models.Question)
-	if !ok {
-		// q가 models.Question 타입이 아닐 때의 에러 처리
-		return models.Question{}, fmt.Errorf("type assertion failed: q is not a models.Question")
+func (s QuestionService) Add(ctx context.Context, m models.Question) (models.Question, error) {
+	newDoc := s.fs.collection.NewDoc()
+	m.Id = newDoc.ID
+
+	_, err := newDoc.Create(ctx, m)
+	if err != nil {
+		log.Println("error: ", err)
+		return models.Question{}, fmt.Errorf("firestoreService: func Add failure")
 	}
-
-	result, err := s.fs.Add(ctx, model)
-
-	return result, err
+	return m, nil
 }
 
-func (s QuestionService) Get(ctx context.Context, id string) (interface{}, error) {
+func (s QuestionService) Get(ctx context.Context, id string) (models.Question, error) {
 	// Query for "student" type users
 	q := s.fs.collection.Doc(id)
 
@@ -48,18 +54,6 @@ func (s QuestionService) Get(ctx context.Context, id string) (interface{}, error
 	}
 	return question, nil
 }
-
-// func (s QuestionService) List(models.Question) models.Question {
-// 	return models.Question{}
-// }
-
-// func (s QuestionService) Update(models.Question) models.Question {
-// 	return models.Question{}
-// }
-
-//	func (s QuestionService) Remove(models.Question) models.Question {
-//		return models.Question{}
-//	}
 
 var questionfs FirestoreService = NewFirestoreService(configs.Client, "question")
 var QuestionSvc StoreService = NewQuestionService(questionfs)

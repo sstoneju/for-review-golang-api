@@ -32,15 +32,9 @@ func CreateQuestion() gin.HandlerFunc {
 			return
 		}
 
-		result, err := service.QuestionSvc.Add(ctx, body)
+		question, err := service.QuestionSvc.Add(ctx, body)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		question, ok := result.(models.Question)
-		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Type assertion failed"})
 			return
 		}
 
@@ -55,17 +49,10 @@ func GetQuestion() gin.HandlerFunc {
 		defer cancel()
 		userId := c.Param("userId")
 
-		result, err := service.QuestionSvc.Get(ctx, userId)
+		question, err := service.QuestionSvc.Get(ctx, userId)
 		if err != nil {
 			// data featch is failure
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// 타입 단언을 사용하여 result를 models.Question 타입으로 변환
-		question, ok := result.(models.Question)
-		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Type assertion failed"})
 			return
 		}
 
